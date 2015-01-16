@@ -1447,6 +1447,19 @@ Session::auto_loop_changed (Location* location)
 		}
 	}
 
+	/* possibly move playhead if not rolling; if we are rolling we'll move
+	   to the loop start on stop if that is appropriate.
+	 */
+
+	framepos_t pos;
+
+	if (!transport_rolling() && select_playhead_priority_target (pos)) {
+		if (pos == location->start()) {
+			request_locate (pos);
+		}
+	}
+
+	
 	last_loopend = location->end();
 	set_dirty ();
 }
@@ -6076,7 +6089,6 @@ Session::reconnect_ltc_output ()
 void
 Session::set_range_selection (framepos_t start, framepos_t end)
 {
-	cerr << "set range selection " << start << " .. " << end << endl;
 	_range_selection = Evoral::Range<framepos_t> (start, end);
 	follow_playhead_priority ();
 }
