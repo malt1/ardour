@@ -310,6 +310,7 @@ class ARDOUR_UI : public Gtkmm2ext::UI, public ARDOUR::SessionHandlePtr
 
         int disconnect_from_engine ();
         int reconnect_to_engine ();
+	void hide_application ();
 
   protected:
 	friend class PublicEditor;
