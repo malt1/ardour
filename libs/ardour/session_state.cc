@@ -4172,7 +4172,8 @@ Session::save_as (SaveAs& saveas)
 						string to = make_new_media_path (*i, to_dir, new_folder);
 
 						if (!copy_file (from, to)) {
-							throw Glib::FileError (Glib::FileError::IO_ERROR, "copy failed");
+							throw Glib::FileError (Glib::FileError::IO_ERROR,
+												   string_compose(_("\ncopying \"%1\" failed !"), from));
 						}
 					}
 					
@@ -4203,7 +4204,8 @@ Session::save_as (SaveAs& saveas)
 						}
 						
 						if (!copy_file (from, to)) {
-							throw Glib::FileError (Glib::FileError::IO_ERROR, "copy failed");
+							throw Glib::FileError (Glib::FileError::IO_ERROR,
+												   string_compose(_("\ncopying \"%1\" failed !"), from));
 						}
 					}
 				}
