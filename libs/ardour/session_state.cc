@@ -2052,14 +2052,17 @@ Session::save_template (string template_name)
 		return -1;
 	}
 
-	/* copy plugin state directory */
+	if (!ARDOUR::Profile->get_trx()) {
+		/* copy plugin state directory */
 
-	std::string template_plugin_state_path (Glib::build_filename (template_dir_path, X_("plugins")));
+		std::string template_plugin_state_path (Glib::build_filename (template_dir_path, X_("plugins")));
 
-	if (g_mkdir_with_parents (template_plugin_state_path.c_str(), 0755) != 0) {
-		error << string_compose(_("Could not create directory for Session template plugin state\"%1\" (%2)"),
-				template_plugin_state_path, g_strerror (errno)) << endmsg;
-		return -1;
+		if (g_mkdir_with_parents (template_plugin_state_path.c_str(), 0755) != 0) {
+			error << string_compose(_("Could not create directory for Session template plugin state\"%1\" (%2)"),
+									template_plugin_state_path, g_strerror (errno)) << endmsg;
+			return -1;
+		}
+		copy_files (plugins_dir(), template_plugin_state_path);
 	}
 
 	copy_recurse (plugins_dir(), template_plugin_state_path);
@@ -4144,7 +4147,15 @@ Session::save_as (SaveAs& saveas)
 
 				std::string from = *i;
 				
-				if ((*i).find (interchange_dir_name) != string::npos) {
+#ifdef __APPLE__
+				string filename = Glib::path_get_basename (from);
+				std::transform (filename.begin(), filename.end(), filename.begin(), ::toupper);
+				if (filename == ".DS_STORE") {
+					continue;
+				}
+#endif
+				
+				if (from.find (interchange_dir_name) != string::npos) {
 					
 					/* media file */
 
