@@ -670,3 +670,9 @@ ARDOUR_UI::focus_on_clock ()
 		primary_clock->focus ();
 	}
 }
+
+Gtk::Notebook&
+ARDOUR_UI::tabs()
+{
+	return editor->tabs();
+}

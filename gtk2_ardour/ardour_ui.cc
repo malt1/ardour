@@ -195,7 +195,6 @@ ARDOUR_UI::ARDOUR_UI (int *argcp, char **argvp[], const char* localedir)
 	, video_timeline(0)
 
 	  /* start of private members */
-	, editor (0)
 	, mixer (0)
 	, nsm (0)
 	, _was_dirty (false)
@@ -224,9 +223,9 @@ ARDOUR_UI::ARDOUR_UI (int *argcp, char **argvp[], const char* localedir)
 	, editor_meter(0)
 	, editor_meter_peak_display()
 
+	, rc_option_editor (0)
 	, speaker_config_window (X_("speaker-config"), _("Speaker Configuration"))
 	, key_editor (X_("key-editor"), _("Key Bindings"))
-	, rc_option_editor (X_("rc-options-editor"), _("Preferences"))
 	, add_route_dialog (X_("add-routes"), _("Add Tracks/Busses"))
 	, about (X_("about"), _("About"))
 	, location_ui (X_("locations"), _("Locations"))
@@ -380,7 +379,7 @@ ARDOUR_UI::ARDOUR_UI (int *argcp, char **argvp[], const char* localedir)
 
 	if (ui_xml) {
 		key_editor.set_state (*ui_xml);
-		rc_option_editor.set_state (*ui_xml);
+		// rc_option_editor.set_state (*ui_xml);
 		session_option_editor.set_state (*ui_xml);
 		speaker_config_window.set_state (*ui_xml);
 		about.set_state (*ui_xml);
@@ -396,7 +395,7 @@ ARDOUR_UI::ARDOUR_UI (int *argcp, char **argvp[], const char* localedir)
 	}
 
 	WM::Manager::instance().register_window (&key_editor);
-	WM::Manager::instance().register_window (&rc_option_editor);
+	// WM::Manager::instance().register_window (&rc_option_editor);
 	WM::Manager::instance().register_window (&session_option_editor);
 	WM::Manager::instance().register_window (&speaker_config_window);
 	WM::Manager::instance().register_window (&about);

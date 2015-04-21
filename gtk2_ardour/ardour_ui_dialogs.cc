@@ -365,11 +365,14 @@ ARDOUR_UI::goto_mixer_window ()
 	}
 
 	mixer->show_window ();
-	mixer->present ();
+
+	// mixer->present ();
 	/* mixer should now be on top */
-	if (ARDOUR_UI::config()->get_transients_follow_front()) {
-		WM::Manager::instance().set_transient_for (mixer);
-	}
+
+	// if (ARDOUR_UI::config()->get_transients_follow_front()) {
+	// WM::Manager::instance().set_transient_for (mixer);
+	// }
+
 	_mixer_on_top = true;
 }
 
@@ -386,7 +389,7 @@ ARDOUR_UI::toggle_mixer_window ()
 	if (tact->get_active()) {
 		goto_mixer_window ();
 	} else {
-		mixer->hide ();
+		mixer->hide_window ((GdkEventAny*)0);
 	}
 }
 
@@ -419,48 +422,49 @@ ARDOUR_UI::toggle_editor_mixer ()
 	*/
         bool same_screen = true; 
 	
-        if (editor && mixer) {
+        if (editor && mixer->own_window()) {
 
 		/* remeber: Screen != Monitor (Screen is a separately rendered
 		 * continuous geometry that make include 1 or more monitors.
 		 */
 		
-                if (editor->get_screen() != mixer->get_screen() && (mixer->get_screen() != 0) && (editor->get_screen() != 0)) {
+                if (editor->get_screen() != mixer->own_window()->get_screen() &&
+		    (mixer->own_window()->get_screen() != 0) && (editor->get_screen() != 0)) {
                         // different screens, so don't do anything
                         same_screen = false;
                 } else {
                         // they are on the same screen, see if they are obscuring each other
 
-                        gint ex, ey, ew, eh;
-                        gint mx, my, mw, mh;
-
-                        editor->get_position (ex, ey);
-                        editor->get_size (ew, eh);
-
-                        mixer->get_position (mx, my);
-                        mixer->get_size (mw, mh);
-
-                        GdkRectangle e;
-                        GdkRectangle m;
-                        GdkRectangle r;
-
-                        e.x = ex;
-                        e.y = ey;
-                        e.width = ew;
-                        e.height = eh;
-
-                        m.x = mx;
-                        m.y = my;
-                        m.width = mw;
-                        m.height = mh;
-
-        		if (gdk_rectangle_intersect (&e, &m, &r)) {
-                                obscuring = true;
-                        }
+			gint ex, ey, ew, eh;
+			gint mx, my, mw, mh;
+			GdkRectangle e;
+			GdkRectangle m;
+			GdkRectangle r;
+			
+			
+			editor->get_position (ex, ey);
+			editor->get_size (ew, eh);
+			
+			e.x = ex;
+			e.y = ey;
+			e.width = ew;
+			e.height = eh;
+			
+			mixer->own_window()->get_position (mx, my);
+			mixer->own_window()->get_size (mw, mh);
+			
+			m.x = mx;
+			m.y = my;
+			m.width = mw;
+			m.height = mh;
+			
+			if (gdk_rectangle_intersect (&e, &m, &r)) {
+				obscuring = true;
+			}
                 }
         }
 
-        if (mixer && !mixer->not_visible() && mixer->property_has_toplevel_focus()) {
+        if (mixer && mixer->own_window() && mixer->visible() && mixer->own_window()->property_has_toplevel_focus()) {
                 if (obscuring && same_screen) {
                         goto_editor_window();
                 }
@@ -468,7 +472,7 @@ ARDOUR_UI::toggle_editor_mixer ()
                 if (obscuring && same_screen) {
                         goto_mixer_window();
                 }
-        } else if (mixer && mixer->not_visible()) {
+        } else if (mixer && mixer->own_window() && !mixer->visible()) {
                 if (obscuring && same_screen) {
                         goto_mixer_window ();
                 }
@@ -563,7 +567,7 @@ ARDOUR_UI::main_window_state_event_handler (GdkEventWindowState* ev, bool window
 		if ((ev->changed_mask & GDK_WINDOW_STATE_FULLSCREEN) &&
 		    (ev->new_window_state & GDK_WINDOW_STATE_FULLSCREEN)) {
 			if (big_clock_window) {
-				big_clock_window->set_transient_for (*mixer);
+				// big_clock_window->set_transient_for (*mixer);
 			}
 		}
 	}
