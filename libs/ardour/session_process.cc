@@ -83,7 +83,7 @@ Session::process (pframes_t nframes)
 	 */
 	boost::shared_ptr<RouteList> r = routes.reader ();
 	for (RouteList::iterator i = r->begin(); i != r->end(); ++i) {
-		(*i)->apply_meter_change_rt();
+		(*i)->apply_processor_changes_rt();
 	}
 
 	_engine.main_thread()->drop_buffers ();
