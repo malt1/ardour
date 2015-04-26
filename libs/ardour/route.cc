@@ -3388,9 +3388,13 @@ Route::apply_processor_changes_rt ()
 	if (_pending_meter_point != _meter_point) {
 		Glib::Threads::RWLock::WriterLock pwl (_processor_lock, Glib::Threads::TRY_LOCK);
 		if (pwl.locked()) {
+			int64_t clock1, clock2;
+			clock1 = g_get_monotonic_time();
 			/* meters always have buffers for 'processor_max_streams'
 			 * they can be re-positioned without re-allocation */
 			set_meter_point_unlocked();
+			clock2 = g_get_monotonic_time();
+			printf("MTR CHANGE %.2f ms\n", (clock2 - clock1) / 1000.f);
 		}
 	}
 
@@ -3399,16 +3403,33 @@ Route::apply_processor_changes_rt ()
 	if (g_atomic_int_get (&_pending_process_reorder)) {
 		Glib::Threads::RWLock::WriterLock pwl (_processor_lock, Glib::Threads::TRY_LOCK);
 		if (pwl.locked()) {
+			int64_t clock[3];
+			clock[0] = g_get_monotonic_time();
 			apply_processor_order (_pending_processor_order);
+			clock[1] = g_get_monotonic_time();
 			setup_invisible_processors ();
+			clock[2] = g_get_monotonic_time();
 
-			changed = true;
+			printf("Reorder %.3f + %.3f =  %.3f ms\n",
+					(clock[1] - clock[0]) / 1000.f,
+					(clock[2] - clock[1]) / 1000.f,
+					(clock[2] - clock[0]) / 1000.f);
+					changed = true;
 			g_atomic_int_set (&_pending_process_reorder, 0);
 		}
 	}
 	if (changed) {
+		int64_t clock[3];
+		clock[0] = g_get_monotonic_time();
 		processors_changed (RouteProcessorChange ()); /* EMIT SIGNAL */
+		clock[1] = g_get_monotonic_time();
 		set_processor_positions ();
+		clock[2] = g_get_monotonic_time();
+		printf("SIGNAL %.3f + %.3f =  %.3f ms\n",
+				(clock[1] - clock[0]) / 1000.f,
+				(clock[2] - clock[1]) / 1000.f,
+				(clock[2] - clock[0]) / 1000.f);
+
 	}
 }
 
@@ -3436,6 +3457,9 @@ __attribute__((annotate("realtime")))
 void
 Route::set_meter_point_unlocked ()
 {
+	int64_t clock[10];
+
+	clock[0] = g_get_monotonic_time();
 #ifndef NDEBUG
 	/* Caller must hold process and processor write lock */
 	assert (!AudioEngine::instance()->process_lock().trylock());
@@ -3443,11 +3467,14 @@ Route::set_meter_point_unlocked ()
 	assert (!lm.locked ());
 #endif
 
-	_meter_point = _pending_meter_point;;
+	clock[1] = g_get_monotonic_time();
+	_meter_point = _pending_meter_point;
 
 	bool meter_was_visible_to_user = _meter->display_to_user ();
 
 	maybe_note_meter_position ();
+
+	clock[2] = g_get_monotonic_time();
 
 	if (_meter_point != MeterCustom) {
 
@@ -3475,11 +3502,14 @@ Route::set_meter_point_unlocked ()
 			}
 		}
 	}
+	clock[3] = g_get_monotonic_time();
 
 	/* Set up the meter for its new position */
 
 	ProcessorList::iterator loc = find (_processors.begin(), _processors.end(), _meter);
 	
+	clock[4] = g_get_monotonic_time();
+
 	ChanCount m_in;
 	
 	if (loc == _processors.begin()) {
@@ -3490,6 +3520,8 @@ Route::set_meter_point_unlocked ()
 		m_in = (*before)->output_streams ();
 	}
 
+	clock[5] = g_get_monotonic_time();
+
 	_meter->reflect_inputs (m_in);
 
 	/* we do not need to reconfigure the processors, because the meter
@@ -3498,6 +3530,7 @@ Route::set_meter_point_unlocked ()
 	   it doesn't require any changes to the other processors.
 	*/
 
+	clock[6] = g_get_monotonic_time();
 	/* these should really be done after releasing the lock
 	 * but all those signals are subscribed to with gui_thread()
 	 * so we're safe.
@@ -3505,6 +3538,17 @@ Route::set_meter_point_unlocked ()
 	meter_change (); /* EMIT SIGNAL */
 	bool const meter_visibly_changed = (_meter->display_to_user() != meter_was_visible_to_user);
 	processors_changed (RouteProcessorChange (RouteProcessorChange::MeterPointChange, meter_visibly_changed)); /* EMIT SIGNAL */
+	clock[7] = g_get_monotonic_time();
+
+	printf("MTR %.3f + %.3f + %.3f + %.3f + %.3f + %.3f + %.3f  =  %.3f ms\n",
+			(clock[1] - clock[0]) / 1000.f,
+			(clock[2] - clock[1]) / 1000.f,
+			(clock[3] - clock[2]) / 1000.f,
+			(clock[4] - clock[3]) / 1000.f,
+			(clock[5] - clock[4]) / 1000.f,
+			(clock[6] - clock[5]) / 1000.f,
+			(clock[7] - clock[6]) / 1000.f,
+			(clock[7] - clock[0]) / 1000.f);
 }
 
 void
