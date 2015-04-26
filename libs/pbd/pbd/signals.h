@@ -39,8 +39,10 @@
 #include "pbd/libpbd_visibility.h"
 #include "pbd/event_loop.h"
 
+#ifndef NDEBUG
 #define DEBUG_PBD_SIGNAL_CONNECTIONS
 //#define TIME_PBD_SIGNAL_EMISSION 100
+#endif
 
 #ifdef DEBUG_PBD_SIGNAL_CONNECTIONS
 #include "pbd/stacktrace.h"

@@ -2888,7 +2888,7 @@ Route::set_processor_state (const XMLNode& node)
 	}
 
 	reset_instrument_info ();
-	processors_changed (RouteProcessorChange ());
+	processors_changed (RouteProcessorChange ()); /* EMIT SIGNAL */
 	set_processor_positions ();
 }
 
