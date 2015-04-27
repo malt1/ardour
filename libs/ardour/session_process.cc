@@ -86,7 +86,7 @@ Session::process (pframes_t nframes)
 	clock1 = g_get_monotonic_time();
 #endif
 	boost::shared_ptr<RouteList> r = routes.reader ();
-	for (RouteList::iterator i = r->begin(); i != r->end(); ++i) {
+	for (RouteList::const_iterator i = r->begin(); i != r->end(); ++i) {
 		(*i)->apply_processor_changes_rt();
 	}
 #if 1
