@@ -367,8 +367,10 @@ AbstractUI<RequestObject>::send_request (RequestObject *req)
 template<typename RequestObject> void
 AbstractUI<RequestObject>::call_slot (InvalidationRecord* invalidation, const boost::function<void()>& f)
 {
+#ifdef PROFILE_CALL_SLOT
 	int64_t clock[5];
 	clock[0] = g_get_monotonic_time();
+#endif
 	if (caller_is_self()) {
 		DEBUG_TRACE (PBD::DEBUG::AbstractUI, string_compose ("%1/%2 direct dispatch of call slot via functor @ %3, invalidation %4\n", name(), pthread_name(), &f, invalidation));
 		f ();
@@ -396,17 +398,21 @@ AbstractUI<RequestObject>::call_slot (InvalidationRecord* invalidation, const bo
 	 */
 
         req->invalidation = invalidation;
+#ifdef PROFILE_CALL_SLOT
 	clock[1] = g_get_monotonic_time();
+#endif
 
         if (invalidation) {
                 invalidation->requests.push_back (req);
                 invalidation->event_loop = this;
         }
 
+#ifdef PROFILE_CALL_SLOT
 	clock[2] = g_get_monotonic_time();
+#endif
 	send_request (req);
+#ifdef PROFILE_CALL_SLOT
 	clock[3] = g_get_monotonic_time();
-
 	if ((clock[3] - clock[0]) > 15) {
 		printf("CALL SLOT %.3f + %.3f + %.3f =  %.3f ms\n",
 				(clock[1] - clock[0]) / 1000.f,
@@ -414,5 +420,6 @@ AbstractUI<RequestObject>::call_slot (InvalidationRecord* invalidation, const bo
 				(clock[3] - clock[2]) / 1000.f,
 				(clock[3] - clock[0]) / 1000.f);
 	}
+#endif
 }	
 

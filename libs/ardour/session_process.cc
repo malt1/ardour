@@ -95,7 +95,7 @@ Session::process (pframes_t nframes)
 
 	static double avg_ela  = 0;
 	avg_ela = avg_ela + .05 * (elapsed_time - avg_ela) + 1e-12;
-	if (elapsed_time > 100) { // usec
+	if (elapsed_time > 30) { // usec
 	printf("ELAPSED %.2f ms (avg: %.2f ms)\n", elapsed_time / 1000.f, avg_ela/ 1000.);
 	}
 #endif
