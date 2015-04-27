@@ -3421,7 +3421,7 @@ Route::apply_processor_changes_rt ()
 	if (changed) {
 		int64_t clock[3];
 		clock[0] = g_get_monotonic_time();
-		processors_changed (RouteProcessorChange ()); /* EMIT SIGNAL */
+		processors_changed (RouteProcessorChange (RealTimeChange)); /* EMIT SIGNAL */
 		clock[1] = g_get_monotonic_time();
 		set_processor_positions ();
 		clock[2] = g_get_monotonic_time();
