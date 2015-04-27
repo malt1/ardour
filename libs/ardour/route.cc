@@ -43,6 +43,7 @@
 #include "ardour/audioengine.h"
 #include "ardour/buffer.h"
 #include "ardour/buffer_set.h"
+#include "ardour/butler.h"
 #include "ardour/capturing_processor.h"
 #include "ardour/debug.h"
 #include "ardour/delivery.h"
@@ -3385,12 +3386,18 @@ __attribute__((annotate("realtime")))
 void
 Route::apply_processor_changes_rt ()
 {
+	int emissions = EmitNone;
+
 	if (_pending_meter_point != _meter_point) {
 		Glib::Threads::RWLock::WriterLock pwl (_processor_lock, Glib::Threads::TRY_LOCK);
 		if (pwl.locked()) {
 			/* meters always have buffers for 'processor_max_streams'
 			 * they can be re-positioned without re-allocation */
-			set_meter_point_unlocked();
+			if (set_meter_point_unlocked()) {
+				emissions |= EmitMeterChanged | EmitMeterVisibilityChange;;
+			} else {
+				emissions |= EmitMeterChanged;
+			}
 		}
 	}
 
@@ -3401,14 +3408,35 @@ Route::apply_processor_changes_rt ()
 		if (pwl.locked()) {
 			apply_processor_order (_pending_processor_order);
 			setup_invisible_processors ();
-
 			changed = true;
 			g_atomic_int_set (&_pending_process_reorder, 0);
+			emissions |= EmitRtProcessorChange;
 		}
 	}
 	if (changed) {
-		processors_changed (RouteProcessorChange (RouteProcessorChange::RealTimeChange)); /* EMIT SIGNAL */
 		set_processor_positions ();
+	}
+	if (emissions != 0) {
+		g_atomic_int_set (&_pending_signals, emissions);
+		_session.butler()->schedule_route_signal_emission();
+	}
+}
+
+void
+Route::emit_pending_signals ()
+{
+
+	int sig = g_atomic_int_and (&_pending_signals, 0);
+	if (sig & EmitMeterChanged) {
+		meter_change (); /* EMIT SIGNAL */
+		if (sig & EmitMeterVisibilityChange) {
+		processors_changed (RouteProcessorChange (RouteProcessorChange::MeterPointChange, true)); /* EMIT SIGNAL */
+		} else {
+		processors_changed (RouteProcessorChange (RouteProcessorChange::MeterPointChange, false)); /* EMIT SIGNAL */
+		}
+	}
+	if (sig & EmitRtProcessorChange) {
+		processors_changed (RouteProcessorChange (RouteProcessorChange::RealTimeChange)); /* EMIT SIGNAL */
 	}
 }
 
@@ -3423,7 +3451,13 @@ Route::set_meter_point (MeterPoint p, bool force)
 		Glib::Threads::Mutex::Lock lx (AudioEngine::instance()->process_lock ());
 		Glib::Threads::RWLock::WriterLock lm (_processor_lock);
 		_pending_meter_point = p;
-		set_meter_point_unlocked();
+		if (set_meter_point_unlocked()) {
+			meter_change (); /* EMIT SIGNAL */
+			processors_changed (RouteProcessorChange (RouteProcessorChange::MeterPointChange, true)); /* EMIT SIGNAL */
+		} else {
+			meter_change (); /* EMIT SIGNAL */
+			processors_changed (RouteProcessorChange (RouteProcessorChange::MeterPointChange, false)); /* EMIT SIGNAL */
+		}
 	} else {
 		_pending_meter_point = p;
 	}
@@ -3433,7 +3467,7 @@ Route::set_meter_point (MeterPoint p, bool force)
 #ifdef __clang__
 __attribute__((annotate("realtime")))
 #endif
-void
+bool
 Route::set_meter_point_unlocked ()
 {
 #ifndef NDEBUG
@@ -3502,9 +3536,7 @@ Route::set_meter_point_unlocked ()
 	 * but all those signals are subscribed to with gui_thread()
 	 * so we're safe.
 	 */
-	meter_change (); /* EMIT SIGNAL */
-	bool const meter_visibly_changed = (_meter->display_to_user() != meter_was_visible_to_user);
-	processors_changed (RouteProcessorChange (RouteProcessorChange::MeterPointChange, meter_visibly_changed)); /* EMIT SIGNAL */
+	 return (_meter->display_to_user() != meter_was_visible_to_user);
 }
 
 void

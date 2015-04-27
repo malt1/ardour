@@ -160,6 +160,14 @@ Butler::thread_work ()
 						return 0;
 						abort(); /*NOTREACHED*/
 						break;
+					case Request::RouteEmit:
+					{
+						boost::shared_ptr<RouteList> r = _session.get_routes();
+						for (RouteList::const_iterator ci = r->begin(); ci != r->end(); ++ci) {
+							(*ci)->emit_pending_signals ();
+						}
+						continue;
+					}
 
 					default:
 						break;
@@ -318,6 +326,13 @@ Butler::thread_work ()
 
 	return (0);
 }
+
+void
+Butler::schedule_route_signal_emission ()
+{
+	queue_request (Request::RouteEmit);
+}
+
 
 void
 Butler::schedule_transport_work ()

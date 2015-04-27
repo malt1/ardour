@@ -55,11 +55,13 @@ class LIBARDOUR_API Butler : public SessionHandleRef
 	int  start_thread();
 	void terminate_thread();
 	void schedule_transport_work();
+	void schedule_route_signal_emission ();
 	void summon();
 	void stop();
 	void wait_until_finished();
 	bool transport_work_requested() const;
 	void drop_references ();
+
 
 	framecnt_t audio_diskstream_capture_buffer_size() const { return audio_dstream_capture_buffer_size; }
 	framecnt_t audio_diskstream_playback_buffer_size() const { return audio_dstream_playback_buffer_size; }
@@ -72,7 +74,8 @@ class LIBARDOUR_API Butler : public SessionHandleRef
 		enum Type {
 			Run,
 			Pause,
-			Quit
+			Quit,
+			RouteEmit
 		};
 	};
 
