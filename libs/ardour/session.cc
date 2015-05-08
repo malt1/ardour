@@ -2187,6 +2187,8 @@ Session::new_midi_track (const ChanCount& input, const ChanCount& output, boost:
 
 			new_routes.push_back (track);
 			ret.push_back (track);
+
+			RouteAddedOrRemoved (true); /* EMIT SIGNAL */
 		}
 
 		catch (failed_constructor &err) {
@@ -2577,6 +2579,8 @@ Session::new_audio_route (int input_channels, int output_channels, RouteGroup* r
 
 			ret.push_back (bus);
 			
+			RouteAddedOrRemoved (true); /* EMIT SIGNAL */
+
 			ARDOUR::GUIIdle ();
 		}
 
@@ -2701,6 +2705,8 @@ Session::new_route_from_template (uint32_t how_many, const std::string& template
 			++control_id;
 
 			ret.push_back (route);
+
+			RouteAddedOrRemoved (true); /* EMIT SIGNAL */
 		}
 
 		catch (failed_constructor &err) {
