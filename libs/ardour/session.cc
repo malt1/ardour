@@ -1600,6 +1600,15 @@ Session::location_added (Location *location)
                 _session_range_location = location;
         }
 
+        if (location->is_mark()) {
+                /* listen for per-location signals that require us to do any * global updates for marks */
+
+                location->StartChanged.connect_same_thread (skip_update_connections, boost::bind (&Session::update_marks, this, location));
+                location->EndChanged.connect_same_thread (skip_update_connections, boost::bind (&Session::update_marks, this, location));
+                location->Changed.connect_same_thread (skip_update_connections, boost::bind (&Session::update_marks, this, location));
+                location->FlagsChanged.connect_same_thread (skip_update_connections, boost::bind (&Session::update_marks, this, location));
+        }
+
         if (location->is_skip()) {
                 /* listen for per-location signals that require us to update skip-locate events */
 
@@ -1610,7 +1619,7 @@ Session::location_added (Location *location)
 
                 update_skips (location, true);
         }
-
+        
 	set_dirty ();
 }
 
