@@ -4308,6 +4308,8 @@ Session::save_as (SaveAs& saveas)
 		}
 
 		saveas.final_session_folder_name = _path;
+
+		store_recent_sessions (_name, _path);
 		
 		if (!saveas.switch_to) {
 
@@ -4387,11 +4389,5 @@ Session::save_as (SaveAs& saveas)
 		return -1;
 	}
 	
-	if (ARDOUR::Profile->get_trx()) {
-		// Tracks Live should store name of the "saved as" session in the
-		// recent session list
-		store_recent_sessions (_name, _path);
-	}
-
 	return 0;
 }
