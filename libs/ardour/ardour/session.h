@@ -979,6 +979,8 @@ class LIBARDOUR_API Session : public PBD::StatefulDestructible, public PBD::Scop
     
 	MIDI::MachineControl& mmc() { return *_mmc; }
 
+	void reconnect_midi_scene_ports (bool);
+
   protected:
 	friend class AudioEngine;
 	void set_block_size (pframes_t nframes);
