@@ -66,6 +66,9 @@
 #include "ardour/control_protocol_manager.h"
 #include "ardour/data_type.h"
 #include "ardour/debug.h"
+#ifdef USE_TRACKS_CODE_FEATURES
+#include "ardour/engine_state_controller.h"
+#endif
 #include "ardour/filename_extensions.h"
 #include "ardour/graph.h"
 #include "ardour/midiport_manager.h"
