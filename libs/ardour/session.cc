@@ -1558,12 +1558,6 @@ Session::set_auto_loop_location (Location* location)
 }
 
 void
-Session::update_loop (Location*)
-{
-	set_dirty ();
-}
-
-void
 Session::update_marks (Location*)
 {
 	set_dirty ();
