@@ -52,6 +52,19 @@ uint64_t PBD::DEBUG::AbstractUI = PBD::new_debug_bit ("abstractui");
 uint64_t PBD::DEBUG::FileUtils = PBD::new_debug_bit ("fileutils");
 uint64_t PBD::DEBUG::Configuration = PBD::new_debug_bit ("configuration");
 
+/* These are debug bits that are used by backends. Since these are loaded dynamically,
+   after command-line parsing, defining them in code that is part of the backend
+   doesn't make them available for command line parsing. Put them here.
+
+   This is sort of a hack, because it means that the debug bits aren't defined
+   with the code in which they are relevant. But providing access to debug bits
+   from dynamically loaded code, for use in command line parsing, is way above the pay grade
+   of this debug tracing scheme.
+*/
+
+uint64_t PBD::DEBUG::WavesMIDI = PBD::new_debug_bit ("WavesMIDI");
+uint64_t PBD::DEBUG::WavesAudio = PBD::new_debug_bit ("WavesAudio");
+
 uint64_t PBD::debug_bits = 0x0;
 
 uint64_t

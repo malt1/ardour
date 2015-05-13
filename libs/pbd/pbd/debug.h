@@ -47,7 +47,12 @@ namespace PBD {
 		LIBPBD_API extern uint64_t EventLoop;
 		LIBPBD_API extern uint64_t AbstractUI;
 		LIBPBD_API extern uint64_t Configuration;
-		extern uint64_t FileUtils;
+		LIBPBD_API extern uint64_t FileUtils;
+	
+                /* See notes in ../debug.cc on why these are defined here */
+
+                LIBPBD_API extern uint64_t WavesMIDI;
+                LIBPBD_API extern uint64_t WavesAudio;
 	}
 }
 
