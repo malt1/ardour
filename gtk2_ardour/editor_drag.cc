@@ -249,18 +249,9 @@ Drag::start_grab (GdkEvent* event, Gdk::Cursor *cursor)
 {
 	// if dragging with button2, the motion is x constrained, with Alt-button2 it is y constrained
 
-	if (Keyboard::is_button2_event (&event->button)) {
-		if (Keyboard::modifier_state_equals (event->button.state, Keyboard::SecondaryModifier)) {
-			_y_constrained = true;
-			_x_constrained = false;
-		} else {
-			_y_constrained = false;
-			_x_constrained = true;
-		}
-	} else {
-		_x_constrained = false;
-		_y_constrained = false;
-	}
+	/* we set up x/y dragging constraints on first move */
+	_x_constrained = false;
+	_y_constrained = false;
 
 	_raw_grab_frame = _editor->canvas_event_sample (event, &_grab_x, &_grab_y);
 
@@ -408,8 +399,16 @@ Drag::motion_handler (GdkEvent* event, bool from_autoscroll)
 				/* just changed */
 
 				if (fabs (current_pointer_y() - _grab_y) > fabs (current_pointer_x() - _grab_x)) {
+					if (event->motion.state & Gdk::BUTTON2_MASK) {
+						_x_constrained = true;
+						_y_constrained = false;
+					}
 					_initially_vertical = true;
 				} else {
+					if (event->motion.state & Gdk::BUTTON2_MASK) {
+						_x_constrained = false;
+						_y_constrained = true;
+					}
 					_initially_vertical = false;
 				}
 			}
@@ -573,7 +572,6 @@ RegionMotionDrag::RegionMotionDrag (Editor* e, ArdourCanvas::Item* i, RegionView
 	, _total_x_delta (0)
 	, _last_pointer_time_axis_view (0)
 	, _last_pointer_layer (0)
-	, _single_axis (false)
 	, _ndropzone (0)
 	, _pdropzone (0)
 	, _ddropzone (0)
@@ -586,10 +584,6 @@ RegionMotionDrag::start_grab (GdkEvent* event, Gdk::Cursor* cursor)
 {
 	Drag::start_grab (event, cursor);
 	setup_snap_delta (_last_frame_position);
-
-	if (Keyboard::modifier_state_equals (event->button.state, Keyboard::ModifierMask (Keyboard::PrimaryModifier | Keyboard::TertiaryModifier))) {
-		_single_axis = true;
-	}
 
 	show_verbose_cursor_time (_last_frame_position);
 
@@ -768,18 +762,6 @@ RegionMotionDrag::motion (GdkEvent* event, bool first_move)
 	int current_pointer_time_axis_view = -1;
 
 	assert (!_views.empty ());
-
-	if (first_move) {
-		if (_single_axis) {
-			if (initially_vertical()) {
-				_y_constrained = false;
-				_x_constrained = true;
-			} else {
-				_y_constrained = true;
-				_x_constrained = false;
-			}
-		}
-	}
 
 	/* Note: time axis views in this method are often expressed as an index into the _time_axis_views vector */
 
@@ -2608,7 +2590,6 @@ VideoTimeLineDrag::aborted (bool)
 TrimDrag::TrimDrag (Editor* e, ArdourCanvas::Item* i, RegionView* p, list<RegionView*> const & v, bool preserve_fade_anchor)
 	: RegionDrag (e, i, p, v)
 	, _preserve_fade_anchor (preserve_fade_anchor)
-	, _jump_position_when_done (false)
 {
 	DEBUG_TRACE (DEBUG::Drags, "New TrimDrag\n");
 }
@@ -2631,7 +2612,7 @@ TrimDrag::start_grab (GdkEvent* event, Gdk::Cursor*)
 	framepos_t const pf = adjusted_current_frame (event);
 	setup_snap_delta (region_start);
 
-	if (Keyboard::modifier_state_equals (event->button.state, Keyboard::PrimaryModifier)) {
+	if (Keyboard::modifier_state_equals (event->button.state, Keyboard::SecondaryModifier)) {
 		/* Move the contents of the region around without changing the region bounds */
 		_operation = ContentsTrim;
 		Drag::start_grab (event, _editor->cursors()->trimmer);
@@ -2640,7 +2621,7 @@ TrimDrag::start_grab (GdkEvent* event, Gdk::Cursor*)
 		if (pf < (region_start + region_length/2)) {
 			/* closer to front */
 			_operation = StartTrim;
-			if (Keyboard::modifier_state_equals (event->button.state, Keyboard::ModifierMask (Keyboard::PrimaryModifier | Keyboard::TertiaryModifier))) {
+			if (Keyboard::modifier_state_equals (event->button.state, Keyboard::PrimaryModifier)) {
 				Drag::start_grab (event, _editor->cursors()->anchored_left_side_trim);
 			} else {
 				Drag::start_grab (event, _editor->cursors()->left_side_trim);
@@ -2648,16 +2629,12 @@ TrimDrag::start_grab (GdkEvent* event, Gdk::Cursor*)
 		} else {
 			/* closer to end */
 			_operation = EndTrim;
-			if (Keyboard::modifier_state_equals (event->button.state, Keyboard::ModifierMask (Keyboard::PrimaryModifier | Keyboard::TertiaryModifier))) {
+			if (Keyboard::modifier_state_equals (event->button.state, Keyboard::PrimaryModifier)) {
 				Drag::start_grab (event, _editor->cursors()->anchored_right_side_trim);
 			} else {
 				Drag::start_grab (event, _editor->cursors()->right_side_trim);
 			}
 		}
-	}
-	/* XXX this "feature" gives the user no clue as to what is going to happen. */
-	if (Keyboard::modifier_state_equals (event->button.state, Keyboard::ModifierMask (Keyboard::PrimaryModifier | Keyboard::TertiaryModifier))) {
-		_jump_position_when_done = true;
 	}
 
 	switch (_operation) {
@@ -2859,9 +2836,6 @@ TrimDrag::finished (GdkEvent* event, bool movement_occurred)
 						ar->set_fade_in_active(true);
 					}
 				}
-				if (_jump_position_when_done) {
-					i->view->region()->set_position (i->initial_position);
-				}
 			}
 		} else if (_operation == EndTrim) {
 			for (list<DraggingView>::const_iterator i = _views.begin(); i != _views.end(); ++i) {
@@ -2873,9 +2847,6 @@ TrimDrag::finished (GdkEvent* event, bool movement_occurred)
 						ar->set_fade_out_length(i->anchored_fade_length);
 						ar->set_fade_out_active(true);
 					}
-				}
-				if (_jump_position_when_done) {
-					i->view->region()->set_position (i->initial_end - i->view->region()->length());
 				}
 			}
 		}
