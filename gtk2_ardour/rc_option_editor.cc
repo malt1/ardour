@@ -434,7 +434,7 @@ public:
 			}
 		}
 
-		Table* t = manage (new Table (4, 4));
+		Table* t = manage (new Table (4, 5));
 		t->set_spacings (4);
 
 		Label* l = manage (left_aligned_label (_("Edit using:")));
@@ -506,7 +506,7 @@ public:
 		_insert_note_button_adjustment.set_value (Keyboard::insert_note_button());
 		_insert_note_button_adjustment.signal_value_changed().connect (sigc::mem_fun(*this, &KeyboardOptions::insert_note_button_changed));
 
-
+		/* ignore snap */
 		set_popdown_strings (_snap_modifier_combo, dumb);
 		_snap_modifier_combo.signal_changed().connect (sigc::mem_fun(*this, &KeyboardOptions::snap_modifier_chosen));
 
@@ -523,6 +523,23 @@ public:
 		t->attach (*l, 0, 1, 3, 4, FILL | EXPAND, FILL);
 		t->attach (_snap_modifier_combo, 1, 2, 3, 4, FILL | EXPAND, FILL);
 
+		/* snap delta */
+		set_popdown_strings (_snap_delta_combo, dumb);
+		_snap_delta_combo.signal_changed().connect (sigc::mem_fun(*this, &KeyboardOptions::snap_delta_modifier_chosen));
+
+		for (int x = 0; modifiers[x].name; ++x) {
+			if (modifiers[x].modifier == (guint) Keyboard::snap_delta_modifier ()) {
+				_snap_delta_combo.set_active_text (S_(modifiers[x].name));
+				break;
+			}
+		}
+
+		l = manage (left_aligned_label (_("Snap to absolute using:")));
+		l->set_name ("OptionsLabel");
+
+		t->attach (*l, 0, 1, 4, 5, FILL | EXPAND, FILL);
+		t->attach (_snap_delta_combo, 1, 2, 4, 5, FILL | EXPAND, FILL);
+
 		vector<string> strs;
 
 		for (map<string,string>::iterator bf = Keyboard::binding_files.begin(); bf != Keyboard::binding_files.end(); ++bf) {
@@ -536,8 +553,8 @@ public:
 		l = manage (left_aligned_label (_("Keyboard layout:")));
 		l->set_name ("OptionsLabel");
 
-		t->attach (*l, 0, 1, 4, 5, FILL | EXPAND, FILL);
-		t->attach (_keyboard_layout_selector, 1, 2, 4, 5, FILL | EXPAND, FILL);
+		t->attach (*l, 0, 1, 5, 6, FILL | EXPAND, FILL);
+		t->attach (_keyboard_layout_selector, 1, 2, 5, 6, FILL | EXPAND, FILL);
 
 		_box->pack_start (*t, false, false);
 	}
@@ -617,6 +634,18 @@ private:
 		}
 	}
 
+	void snap_delta_modifier_chosen ()
+	{
+		string const txt = _snap_delta_combo.get_active_text();
+
+		for (int i = 0; modifiers[i].name; ++i) {
+			if (txt == _(modifiers[i].name)) {
+				Keyboard::set_snap_delta_modifier (modifiers[i].modifier);
+				break;
+			}
+		}
+	}
+
 	void delete_button_changed ()
 	{
 		Keyboard::set_delete_button (_delete_button_spin.get_value_as_int());
@@ -637,6 +666,7 @@ private:
 	ComboBoxText _delete_modifier_combo;
 	ComboBoxText _insert_note_modifier_combo;
 	ComboBoxText _snap_modifier_combo;
+	ComboBoxText _snap_delta_combo;
 	Adjustment _delete_button_adjustment;
 	SpinButton _delete_button_spin;
 	Adjustment _edit_button_adjustment;
