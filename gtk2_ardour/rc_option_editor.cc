@@ -386,7 +386,8 @@ static const struct {
 	{ "Option", GDK_MOD1_MASK },
 	{ "Command-Shift", GDK_META_MASK|GDK_SHIFT_MASK },
 	{ "Command-Option", GDK_MOD1_MASK|GDK_META_MASK },
-	{ "Shift-Option", GDK_SHIFT_MASK|GDK_MOD1_MASK },
+	{ "Option-Shift", GDK_MOD1_MASK|GDK_SHIFT_MASK },
+	{ "Control-Shift", GDK_CONTROL_MASK|GDK_SHIFT_MASK },
 	{ "Shift-Command-Option", GDK_MOD5_MASK|GDK_SHIFT_MASK|GDK_META_MASK },
 
 #else
@@ -462,7 +463,7 @@ public:
 
 		l = manage (left_aligned_label (_("When Clicking:")));
 		l->set_name ("OptionEditorHeading");
-		t->attach (*l, col, col + 1, row, row + 1, FILL | EXPAND, FILL);
+		t->attach (*l, col, col + 2, row, row + 1, FILL | EXPAND, FILL);
 
 		++row;
 		col = 1;
@@ -545,7 +546,7 @@ public:
 
 		l = manage (left_aligned_label (_("When Beginning a Drag:")));
 		l->set_name ("OptionEditorHeading");
-		t->attach (*l, 0, 1, row, row + 1, FILL | EXPAND, FILL);
+		t->attach (*l, 0, 2, row, row + 1, FILL | EXPAND, FILL);
 
 		++row;
 		col = 1;
@@ -571,7 +572,7 @@ public:
 
 		l = manage (left_aligned_label (_("When Beginning a Trim:")));
 		l->set_name ("OptionEditorHeading");
-		t->attach (*l, 0, 1, row, row + 1, FILL | EXPAND, FILL);
+		t->attach (*l, 0, 2, row, row + 1, FILL | EXPAND, FILL);
 
 		++row;
 		col = 1;
@@ -661,7 +662,7 @@ public:
 
 		l = manage (left_aligned_label (_("While Dragging:")));
 		l->set_name ("OptionEditorHeading");
-		t->attach (*l, 0, 1, row, row + 1, FILL | EXPAND, FILL);
+		t->attach (*l, 0, 2, row, row + 1, FILL | EXPAND, FILL);
 
 		++row;
 		col = 1;
@@ -677,7 +678,7 @@ public:
 			}
 		}
 
-		l = manage (left_aligned_label (_("Ignore snap using:")));
+		l = manage (left_aligned_label (_("Ignore snap by including:")));
 		l->set_name ("OptionsLabel");
 
 		t->attach (*l, col, col + 1, row, row + 1, FILL | EXPAND, FILL);
@@ -707,7 +708,7 @@ public:
 
 		l = manage (left_aligned_label (_("While Trimming:")));
 		l->set_name ("OptionEditorHeading");
-		t->attach (*l, 0, 1, row, row + 1, FILL | EXPAND, FILL);
+		t->attach (*l, 0, 2, row, row + 1, FILL | EXPAND, FILL);
 
 		++row;
 		col = 1;
@@ -733,7 +734,7 @@ public:
 
 		l = manage (left_aligned_label (_("While Dragging Control Points:")));
 		l->set_name ("OptionEditorHeading");
-		t->attach (*l, 0, 1, row, row + 1, FILL | EXPAND, FILL);
+		t->attach (*l, 0, 2, row, row + 1, FILL | EXPAND, FILL);
 
 		++row;
 		col = 1;
