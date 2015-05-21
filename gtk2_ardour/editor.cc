@@ -2610,23 +2610,13 @@ Editor::snap_to_with_modifier (framepos_t& start, GdkEvent const * event, RoundM
 }
 
 void
-Editor::snap_to (framepos_t& start, RoundMode direction, bool for_mark)
+Editor::snap_to (framepos_t& start, RoundMode direction, bool for_mark, bool explicitly)
 {
 	if (!_session || _snap_mode == SnapOff) {
 		return;
 	}
 
-	snap_to_internal (start, direction, for_mark);
-}
-
-void
-Editor::snap_to_no_magnets (framepos_t& start, RoundMode direction, bool for_mark)
-{
-	if (!_session || _snap_mode == SnapOff) {
-		return;
-	}
-
-	snap_to_internal (start, direction, for_mark, true);
+	snap_to_internal (start, direction, for_mark, explicitly);
 }
 
 void
@@ -2696,7 +2686,7 @@ Editor::timecode_snap_to_internal (framepos_t& start, RoundMode direction, bool 
 }
 
 void
-Editor::snap_to_internal (framepos_t& start, RoundMode direction, bool for_mark, bool no_magnets)
+Editor::snap_to_internal (framepos_t& start, RoundMode direction, bool for_mark, bool explicitly)
 {
 	const framepos_t one_second = _session->frame_rate();
 	const framepos_t one_minute = _session->frame_rate() * 60;
@@ -2866,7 +2856,7 @@ Editor::snap_to_internal (framepos_t& start, RoundMode direction, bool for_mark,
 
 	case SnapMagnetic:
 
-		if (no_magnets) {
+		if (explicitly) {
 			return;
 		}
 
