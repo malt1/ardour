@@ -1042,6 +1042,17 @@ Route::muted () const
 	return _mute_master->muted_by_self();
 }
 
+bool
+Route::muted_by_others () const
+{
+	//master is never muted by others
+	if (is_master())
+		return false;
+		
+	//now check to see if something is soloed (and I am not)
+	return (_session.soloing() && !self_soloed() && !solo_isolated());
+}
+
 #if 0
 static void
 dump_processors(const string& name, const list<boost::shared_ptr<Processor> >& procs)
